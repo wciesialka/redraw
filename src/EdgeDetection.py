@@ -35,25 +35,25 @@ class EdgeDetector:
                 self.matrix[y][x]['v'] = min(255,round(grayscale(px[0],px[1],px[2])))
                 self.matrix[y][x]['a'] = px[3]
 
-        gaussianMatrix = self.__gaussianFilterMatrix()
+        gaussian_matrix = self.__gaussian_filter_matrix()
 
-        self.matrix = self.__convolute(gaussianMatrix)
+        self.matrix = self.__convolute(gaussian_matrix)
         self.matrix = self.__sobel()
         self.__suppress()
 
-    def __gaussianFilterMatrix(self):
+    def __gaussian_filter_matrix(self):
         
         # computations that dont need to be done more than once
 
-        sigmaSquared = self.sigma ** 2
-        doubleSigmaSquared = sigmaSquared * 2
-        fraction = 1/(math.pi*doubleSigmaSquared)
+        sigma_squared = self.sigma ** 2
+        double_sigma_squared = sigma_squared * 2
+        fraction = 1/(math.pi*double_sigma_squared)
         k = ((self.ksize - 1)/2)+1 # we only use k as (k+1) so we can just add one to k here
 
         def H(i,j):
             a = (i-k)**2
             b = (j-k)**2
-            exp = 0 - ((a+b)/doubleSigmaSquared)
+            exp = 0 - ((a+b)/double_sigma_squared)
             return fraction*math.exp(exp)
         
         gaus = [ [0 for _ in range(self.ksize)] for _ in range(self.ksize) ]
@@ -62,7 +62,7 @@ class EdgeDetector:
                 row[i] = H(i+1,j+1)
         return gaus
 
-    def __convoluteAtPoint(self,x,y,kernel,normalize=True):
+    def __convolute_at_point(self,x,y,kernel,normalize=True):
         v = 0
         normalizer = 0
         kernal_size = len(kernel)
@@ -84,26 +84,26 @@ class EdgeDetector:
         return {'v': math.floor(v/normalizer), 'a': self.matrix[y][x]['a']}
 
     def __convolute(self,kernel,normalize=True):
-        newMatrix = [ [{'v': 0, 'a': 255} for _ in range(self.w)] for _ in range(self.h) ]
+        new_matrix = [ [{'v': 0, 'a': 255} for _ in range(self.w)] for _ in range(self.h) ]
 
         for y in range(self.h):
             for x in range(self.w):
-                newMatrix[y][x] = self.__convoluteAtPoint(x,y,kernel,normalize=normalize)
+                new_matrix[y][x] = self.__convolute_at_point(x,y,kernel,normalize=normalize)
         
-        return newMatrix
+        return new_matrix
 
     def __sobel(self):
-        sobelResult = [ [{'g': 0, 'theta': 0, 'a': 255} for _ in range(self.w)] for _ in range(self.h) ]
+        sobel_result = [ [{'g': 0, 'theta': 0, 'a': 255} for _ in range(self.w)] for _ in range(self.h) ]
 
         for y in range(self.h):
             for x in range(self.w):
-                gx = self.__convoluteAtPoint(x,y,EdgeDetector.SOBEL_KX,normalize=False)
-                gy = self.__convoluteAtPoint(x,y,EdgeDetector.SOBEL_KY,normalize=False)
-                sobelResult[y][x]['g'] = math.hypot(gx['v'],gy['v'])
-                sobelResult[y][x]['theta'] = math.atan2(gy['v'],gx['v']) * (180/math.pi)
-                sobelResult[y][x]['a'] = gx['a']
+                gx = self.__convolute_at_point(x,y,EdgeDetector.SOBEL_KX,normalize=False)
+                gy = self.__convolute_at_point(x,y,EdgeDetector.SOBEL_KY,normalize=False)
+                sobel_result[y][x]['g'] = math.hypot(gx['v'],gy['v'])
+                sobel_result[y][x]['theta'] = math.atan2(gy['v'],gx['v']) * (180/math.pi)
+                sobel_result[y][x]['a'] = gx['a']
 
-        return sobelResult
+        return sobel_result
 
     def __suppress(self):
 
@@ -112,7 +112,7 @@ class EdgeDetector:
         theta = 0
         g = 0
 
-        def determineG(dx1,dy1,dx2,dy2):
+        def determine_g(dx1,dy1,dx2,dy2):
             isMax = True
             if(x + dx1 >= 0 and x + dx1 < self.w and y + dy1 >= 0 and y + dy1 < self.h):
                 isMax = isMax and (self.matrix[y+dy1][x+dx1]['g'] < g)
@@ -130,27 +130,27 @@ class EdgeDetector:
 
                 if(g > 0):
                     if(theta > 157.5 or theta <= 22.5):
-                        determineG(-1,0,1,0)
+                        determine_g(-1,0,1,0)
                     elif(theta > 22.5 and theta <= 67.5):
-                        determineG(1,1,-1,-1)
+                        determine_g(1,1,-1,-1)
                     elif(theta > 67.5 and theta <= 112.5):
-                        determineG(0,-1,0,1)
+                        determine_g(0,-1,0,1)
                     else:
-                        determineG(-1,1,1,-1)
+                        determine_g(-1,1,1,-1)
                 
-    def __doubleThreshold(self,noEdgeThreshold,strongEdgeThreshold):
+    def __double_threshold(self,no_edge_threshold,strong_edge_threshold):
         classifications = [ [EdgeDetector.NO_EDGE for _ in range(self.w)] for _ in range(self.h) ]
         strongs = []
         g = 0
 
-        def connectWeakEdges(x,y):
+        def connect_weak_edges(x,y):
             for j in (-1,0,1):
                 if y+j >= 0 and y+j < self.h:
                     for i in (-1,0,1):
                         if x+i >= 0 and x+i < self.w and not (i == 0 and j == 0):
                             if classifications[y+j][x+i] == EdgeDetector.WEAK_EDGE:
                                 classifications[y+j][x+i] = EdgeDetector.STRONG_EDGE
-                                connectWeakEdges(x+i,y+j)
+                                connect_weak_edges(x+i,y+j)
         
         for y in range(self.h):
             for x in range(self.w):
@@ -158,18 +158,18 @@ class EdgeDetector:
                     classifications[y][x] = EdgeDetector.NO_EDGE
                 else:
                     g = self.matrix[y][x]['g']
-                    if g < noEdgeThreshold:
+                    if g < no_edge_threshold:
                         classifications[y][x] = EdgeDetector.NO_EDGE
-                    elif g >= strongEdgeThreshold:
+                    elif g >= strong_edge_threshold:
                         classifications[y][x] = EdgeDetector.STRONG_EDGE
                         strongs.append((x,y))
                     else:
                         classifications[y][x] = EdgeDetector.WEAK_EDGE
 
         for strong_edge in strongs:
-            connectWeakEdges(strong_edge[0],strong_edge[1])
+            connect_weak_edges(strong_edge[0],strong_edge[1])
 
         return classifications
 
     def detect_edges(self,lower,upper):
-        return self.__doubleThreshold(lower,upper)
+        return self.__double_threshold(lower,upper)
