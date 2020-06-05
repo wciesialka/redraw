@@ -5,6 +5,9 @@ def grayscale(r,g,b):
     return ( (0.3 * r) + (0.59 * g) + (0.11 * b) )
 
 class EdgeDetector:
+    '''
+    A class to handle edge detection of images.
+    '''
     SOBEL_KX = [[-1,0,1],
                 [-2,0,2],
                 [-1,0,1]]
@@ -27,18 +30,18 @@ class EdgeDetector:
         self.w = size[0]
         self.h = size[1]
 
-        self.matrix = [ [{'v': 0, 'a': 255} for _ in range(self.w)] for _ in range(self.h) ]
+        self.__matrix = [ [{'v': 0, 'a': 255} for _ in range(self.w)] for _ in range(self.h) ]
 
         for y in range(self.h):
             for x in range(self.w):
                 px = img.getpixel((x,y))
-                self.matrix[y][x]['v'] = min(255,round(grayscale(px[0],px[1],px[2])))
-                self.matrix[y][x]['a'] = px[3]
+                self.__matrix[y][x]['v'] = min(255,round(grayscale(px[0],px[1],px[2])))
+                self.__matrix[y][x]['a'] = px[3]
 
         gaussian_matrix = self.__gaussian_filter_matrix()
 
-        self.matrix = self.__convolute(gaussian_matrix)
-        self.matrix = self.__sobel()
+        self.__matrix = self.__convolute(gaussian_matrix)
+        self.__matrix = self.__sobel()
         self.__suppress()
 
     def __gaussian_filter_matrix(self):
@@ -75,13 +78,13 @@ class EdgeDetector:
                     nX = x - i + half_kernal_size
                     if nX >= 0 and nX < self.w:
                         kern = kernel[j][i]
-                        v += kern*self.matrix[nY][nX]['v']
+                        v += kern*self.__matrix[nY][nX]['v']
                         normalizer += kern
         
         if not normalize:
             normalizer = 1
         
-        return {'v': math.floor(v/normalizer), 'a': self.matrix[y][x]['a']}
+        return {'v': math.floor(v/normalizer), 'a': self.__matrix[y][x]['a']}
 
     def __convolute(self,kernel,normalize=True):
         new_matrix = [ [{'v': 0, 'a': 255} for _ in range(self.w)] for _ in range(self.h) ]
@@ -115,16 +118,16 @@ class EdgeDetector:
         def determine_g(dx1,dy1,dx2,dy2):
             isMax = True
             if(x + dx1 >= 0 and x + dx1 < self.w and y + dy1 >= 0 and y + dy1 < self.h):
-                isMax = isMax and (self.matrix[y+dy1][x+dx1]['g'] < g)
+                isMax = isMax and (self.__matrix[y+dy1][x+dx1]['g'] < g)
             if(x + dx2 >= 0 and x + dx2 < self.w and y + dy2 >= 0 and y + dy2 < self.h):
-                isMax = isMax and (self.matrix[y+dy2][x+dx2]['g'] < g)
+                isMax = isMax and (self.__matrix[y+dy2][x+dx2]['g'] < g)
 
             if not isMax:
-                self.matrix[y][x]['g'] = 0
+                self.__matrix[y][x]['g'] = 0
         
         for y in range(self.h):
             for x in range(self.w):
-                center = self.matrix[y][x]
+                center = self.__matrix[y][x]
                 theta = center['theta']
                 g = center['g']
 
@@ -154,10 +157,10 @@ class EdgeDetector:
         
         for y in range(self.h):
             for x in range(self.w):
-                if self.matrix[y][x]['a'] < 128:
+                if self.__matrix[y][x]['a'] < 128:
                     classifications[y][x] = EdgeDetector.NO_EDGE
                 else:
-                    g = self.matrix[y][x]['g']
+                    g = self.__matrix[y][x]['g']
                     if g < no_edge_threshold:
                         classifications[y][x] = EdgeDetector.NO_EDGE
                     elif g >= strong_edge_threshold:
@@ -171,15 +174,18 @@ class EdgeDetector:
 
         return classifications
 
-    def detect_edges(self,no_edge_threshold:int,strong_edge_threshold:int):
-        '''
+    def detect_edges(self,no_edge_threshold:int,strong_edge_threshold:int) -> list:
+        """
         Detects edges using the class's matrix and the given thresholds.
 
             Parameters:
-                no_edge_threshold (int): The upper bound of what is considered a 'no edge'
-                strong_edge_threshold (int): The lower bound of what is considered a 'strong edge'
+                no_edge_threshold : int
+                    The upper bound of what is considered a 'no edge'
+                strong_edge_threshold : int 
+                    The lower bound of what is considered a 'strong edge'
 
             Returns:
-                edge_matrix (list): Matrix of the same width and height of the parent image, with boolean True if the cell belongs to an edge and boolean False otherwise.
-        '''
+                edge_matrix : list
+                    Matrix of the same width and height of the parent image, with boolean True if the cell belongs to an edge and boolean False otherwise.
+        """
         return [ [ cell == EdgeDetector.STRONG_EDGE for cell in row ] for row in self.__double_threshold(no_edge_threshold,strong_edge_threshold) ]
