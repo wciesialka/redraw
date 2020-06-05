@@ -37,6 +37,10 @@ class EdgeDetector:
 
         self.gaussianMatrix = self.gaussianFilterMatrix()
 
+        self.matrix = self.convolute(self.gaussianMatrix)
+        self.matrix = self.sobel()
+        self.suppress()
+
     def gaussianFilterMatrix(self):
         
         # computations that dont need to be done more than once
@@ -95,13 +99,13 @@ class EdgeDetector:
             for x in range(self.w):
                 gx = self.convoluteAtPoint(x,y,EdgeDetector.SOBEL_KX,normalize=False)
                 gy = self.convoluteAtPoint(x,y,EdgeDetector.SOBEL_KY,normalize=False)
-                sobelResult[y][x]['g'] = math.hypot(gx.v,gy.v)
-                sobelResult[y][x]['theta'] = math.atan2(gy.v,gx.v) * (180/math.pi)
+                sobelResult[y][x]['g'] = math.hypot(gx['v'],gy['v'])
+                sobelResult[y][x]['theta'] = math.atan2(gy['v'],gx['v']) * (180/math.pi)
                 sobelResult[y][x]['a'] = gx['a']
 
         return sobelResult
 
-    def suppression(self):
+    def suppress(self):
 
         x = 0
         y = 0
@@ -167,10 +171,5 @@ class EdgeDetector:
 
         return classifications
 
-    @property
-    def mindim(self):
-        return min(self.w,self.h)
-
-    @property
-    def maxdim(self):
-        return max(self.w,self.h)
+    def detect_edges(self,lower,upper):
+        return self.doubleThreshold(lower,upper)
