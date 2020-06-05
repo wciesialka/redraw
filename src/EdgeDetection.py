@@ -35,13 +35,13 @@ class EdgeDetector:
                 self.matrix[y][x]['v'] = min(255,round(grayscale(px[0],px[1],px[2])))
                 self.matrix[y][x]['a'] = px[3]
 
-        self.gaussianMatrix = self.gaussianFilterMatrix()
+        gaussianMatrix = self.__gaussianFilterMatrix()
 
-        self.matrix = self.convolute(self.gaussianMatrix)
-        self.matrix = self.sobel()
-        self.suppress()
+        self.matrix = self.__convolute(gaussianMatrix)
+        self.matrix = self.__sobel()
+        self.__suppress()
 
-    def gaussianFilterMatrix(self):
+    def __gaussianFilterMatrix(self):
         
         # computations that dont need to be done more than once
 
@@ -62,7 +62,7 @@ class EdgeDetector:
                 row[i] = H(i+1,j+1)
         return gaus
 
-    def convoluteAtPoint(self,x,y,kernel,normalize=True):
+    def __convoluteAtPoint(self,x,y,kernel,normalize=True):
         v = 0
         normalizer = 0
         kernal_size = len(kernel)
@@ -81,31 +81,31 @@ class EdgeDetector:
         if not normalize:
             normalizer = 1
         
-        return {'v': math.floor(v/normalizer), 'a': self.matrix[x][y]['a']}
+        return {'v': math.floor(v/normalizer), 'a': self.matrix[y][x]['a']}
 
-    def convolute(self,kernel,normalize=True):
+    def __convolute(self,kernel,normalize=True):
         newMatrix = [ [{'v': 0, 'a': 255} for _ in range(self.w)] for _ in range(self.h) ]
 
         for y in range(self.h):
             for x in range(self.w):
-                newMatrix[y][x] = self.convoluteAtPoint(x,y,kernel,normalize=normalize)
+                newMatrix[y][x] = self.__convoluteAtPoint(x,y,kernel,normalize=normalize)
         
         return newMatrix
 
-    def sobel(self):
+    def __sobel(self):
         sobelResult = [ [{'g': 0, 'theta': 0, 'a': 255} for _ in range(self.w)] for _ in range(self.h) ]
 
         for y in range(self.h):
             for x in range(self.w):
-                gx = self.convoluteAtPoint(x,y,EdgeDetector.SOBEL_KX,normalize=False)
-                gy = self.convoluteAtPoint(x,y,EdgeDetector.SOBEL_KY,normalize=False)
+                gx = self.__convoluteAtPoint(x,y,EdgeDetector.SOBEL_KX,normalize=False)
+                gy = self.__convoluteAtPoint(x,y,EdgeDetector.SOBEL_KY,normalize=False)
                 sobelResult[y][x]['g'] = math.hypot(gx['v'],gy['v'])
                 sobelResult[y][x]['theta'] = math.atan2(gy['v'],gx['v']) * (180/math.pi)
                 sobelResult[y][x]['a'] = gx['a']
 
         return sobelResult
 
-    def suppress(self):
+    def __suppress(self):
 
         x = 0
         y = 0
@@ -138,7 +138,7 @@ class EdgeDetector:
                     else:
                         determineG(-1,1,1,-1)
                 
-    def doubleThreshold(self,noEdgeThreshold,strongEdgeThreshold):
+    def __doubleThreshold(self,noEdgeThreshold,strongEdgeThreshold):
         classifications = [ [EdgeDetector.NO_EDGE for _ in range(self.w)] for _ in range(self.h) ]
         strongs = []
         g = 0
@@ -172,4 +172,4 @@ class EdgeDetector:
         return classifications
 
     def detect_edges(self,lower,upper):
-        return self.doubleThreshold(lower,upper)
+        return self.__doubleThreshold(lower,upper)
