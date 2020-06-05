@@ -39,6 +39,17 @@ class EdgeDetector:
                     An instance of the EdgeDetector class
         '''
 
+        if not GAUSSIAN_KERNEL_SIGMA is float:
+            try:
+                GAUSSIAN_KERNEL_SIGMA = float(GAUSSIAN_KERNEL_SIGMA)
+            except:
+                raise TypeError('GAUSSIAN_KERNEL_SIGMA should be type float, not %' % type(GAUSSIAN_KERNEL_SIGMA))
+        if not GAUSSIAN_KERNEL_SIZE is int:
+            try:
+                GAUSSIAN_KERNEL_SIZE = int(GAUSSIAN_KERNEL_SIZE)
+            except:
+                raise TypeError('GAUSSIAN_KERNEL_SIZE should be type int, not %' % type(GAUSSIAN_KERNEL_SIZE))
+
 
         self.sigma = GAUSSIAN_KERNEL_SIGMA
         self.ksize = GAUSSIAN_KERNEL_SIZE
@@ -212,7 +223,7 @@ class EdgeDetector:
             Parameters:
                 no_edge_threshold : int
                     The upper bound of what is considered a 'no edge'
-                    
+
                 strong_edge_threshold : int 
                     The lower bound of what is considered a 'strong edge'
 
@@ -220,4 +231,22 @@ class EdgeDetector:
                 edge_matrix : list
                     Matrix of the same width and height of the parent image, with boolean True if the cell belongs to an edge and boolean False otherwise.
         """
+
+        if not no_edge_threshold is int:
+            try:
+                no_edge_threshold = int(no_edge_threshold)
+            except:
+                raise TypeError('no_edge_threshold should be type int, not %' % type(no_edge_threshold))
+        if not strong_edge_threshold is int:
+            try:
+                strong_edge_threshold = int(strong_edge_threshold)
+            except:
+                raise TypeError('strong_edge_threshold should be type int, not %' % type(strong_edge_threshold))
+        if no_edge_threshold < 0 or no_edge_threshold > 255:
+            raise ValueError('no_edge_threshold should be 0 <= no_edge_threshold <= 255, not %' % no_edge_threshold)
+        if strong_edge_threshold < 0 or strong_edge_threshold > 255:
+            raise ValueError('strong_edge_threshold should be 0 <= strong_edge_threshold <= 255, not %' % strong_edge_threshold)
+        if strong_edge_threshold < no_edge_threshold:
+            raise ValueError('strong_edge_threshold should be larger than no_edge_threshold')
+
         return [ [ cell == EdgeDetector.STRONG_EDGE for cell in row ] for row in self.__double_threshold(no_edge_threshold,strong_edge_threshold) ]
