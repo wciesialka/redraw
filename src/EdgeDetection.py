@@ -88,6 +88,20 @@ class EdgeDetector:
         
         return newMatrix
 
+    def sobel(self):
+        sobelResult = [ [{'g': 0, 'theta': 0, 'a': 255} for _ in range(self.w)] for _ in range(self.h) ]
+
+        for y in range(self.h):
+            for x in range(self.w):
+                gx = self.convoluteAtPoint(x,y,EdgeDetector.SOBEL_KX,normalize=False)
+                gy = self.convoluteAtPoint(x,y,EdgeDetector.SOBEL_KY,normalize=False)
+                sobelResult[y][x]['g'] = math.hypot(gx.v,gy.v)
+                sobelResult[y][x]['theta'] = math.atan2(gy.v,gx.v) * (180/math.pi)
+                sobelResult[y][x]['a'] = gx['a']
+
+        return sobelResult
+                
+
     @property
     def mindim(self):
         return min(self.w,self.h)
