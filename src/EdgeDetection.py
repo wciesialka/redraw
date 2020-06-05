@@ -172,4 +172,4 @@ class EdgeDetector:
         return classifications
 
     def detect_edges(self,lower,upper):
-        return self.__double_threshold(lower,upper)
+        return [ [ cell == EdgeDetector.STRONG_EDGE for cell in row ] for row in self.__double_threshold(lower,upper) ]
