@@ -134,6 +134,38 @@ class EdgeDetector:
                     else:
                         determineG(-1,1,1,-1)
                 
+    def doubleThreshold(self,noEdgeThreshold,strongEdgeThreshold):
+        classifications = [ [EdgeDetector.NO_EDGE for _ in range(self.w)] for _ in range(self.h) ]
+        strongs = []
+        g = 0
+
+        def connectWeakEdges(x,y):
+            for j in (-1,0,1):
+                if y+j >= 0 and y+j < self.h:
+                    for i in (-1,0,1):
+                        if x+i >= 0 and x+i < self.w and not (i == 0 and j == 0):
+                            if classifications[y+j][x+i] == EdgeDetector.WEAK_EDGE:
+                                classifications[y+j][x+i] = EdgeDetector.STRONG_EDGE
+                                connectWeakEdges(x+i,y+j)
+        
+        for y in range(self.h):
+            for x in range(self.w):
+                if self.matrix[y][x]['a'] < 128:
+                    classifications[y][x] = EdgeDetector.NO_EDGE
+                else:
+                    g = self.matrix[y][x]['g']
+                    if g < noEdgeThreshold:
+                        classifications[y][x] = EdgeDetector.NO_EDGE
+                    elif g >= strongEdgeThreshold:
+                        classifications[y][x] = EdgeDetector.STRONG_EDGE
+                        strongs.append((x,y))
+                    else:
+                        classifications[y][x] = EdgeDetector.WEAK_EDGE
+
+        for strong_edge in strongs:
+            connectWeakEdges(strong_edge[0],strong_edge[1])
+
+        return classifications
 
     @property
     def mindim(self):
