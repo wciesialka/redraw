@@ -171,5 +171,15 @@ class EdgeDetector:
 
         return classifications
 
-    def detect_edges(self,lower,upper):
-        return [ [ cell == EdgeDetector.STRONG_EDGE for cell in row ] for row in self.__double_threshold(lower,upper) ]
+    def detect_edges(self,no_edge_threshold:int,strong_edge_threshold:int):
+        '''
+        Detects edges using the class's matrix and the given thresholds.
+
+            Parameters:
+                no_edge_threshold (int): The upper bound of what is considered a 'no edge'
+                strong_edge_threshold (int): The lower bound of what is considered a 'strong edge'
+
+            Returns:
+                edge_matrix (list): Matrix of the same width and height of the parent image, with boolean True if the cell belongs to an edge and boolean False otherwise.
+        '''
+        return [ [ cell == EdgeDetector.STRONG_EDGE for cell in row ] for row in self.__double_threshold(no_edge_threshold,strong_edge_threshold) ]
