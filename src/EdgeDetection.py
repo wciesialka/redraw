@@ -20,10 +20,28 @@ class EdgeDetector:
     WEAK_EDGE   = 1
     STRONG_EDGE = 2
 
-    def __init__(self,img:Image,*,GAUSSIAN_KERNAL_SIGMA:float=1.4,GAUSSIAN_KERNAL_SIZE:int=5):
+    def __init__(self,img:Image,*,GAUSSIAN_KERNEL_SIGMA:float=1.4,GAUSSIAN_KERNEL_SIZE:int=5):
+        '''
+        Create a new Edge Detector using the given Image.
 
-        self.sigma = GAUSSIAN_KERNAL_SIGMA
-        self.ksize = GAUSSIAN_KERNAL_SIZE
+            Parameters:
+                img : PIL.Image
+                    The initial image to detect edges on.
+
+                GAUSSIAN_KERNEL_SIGMA : float = 1.4, positional
+                    The Sigma to use in Gaussian Filter Kernel creation. This can affect Edge Detection.
+                
+                GAUSSIAN_KERNEL_SIZE : int = 5, positional
+                    The Kernel Size to use in Gaussian Filter Kernel creation. This can affect Edge Detection.
+
+            Returns:
+                EdgeDetector : EdgeDetector
+                    An instance of the EdgeDetector class
+        '''
+
+
+        self.sigma = GAUSSIAN_KERNEL_SIGMA
+        self.ksize = GAUSSIAN_KERNEL_SIZE
 
         self.load_new_image(img)
 
@@ -194,6 +212,7 @@ class EdgeDetector:
             Parameters:
                 no_edge_threshold : int
                     The upper bound of what is considered a 'no edge'
+                    
                 strong_edge_threshold : int 
                     The lower bound of what is considered a 'strong edge'
 
