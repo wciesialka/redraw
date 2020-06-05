@@ -25,6 +25,19 @@ class EdgeDetector:
         self.sigma = GAUSSIAN_KERNAL_SIGMA
         self.ksize = GAUSSIAN_KERNAL_SIZE
 
+        self.load_new_image(img)
+
+    def load_new_image(self,img:Image):
+        '''
+        Loads a new image into the Edge Detector, and does all neccessary preprocessing to said image.
+
+            Parameters:
+                img : PIL.Image
+                    The new image to load
+    
+            Returns:
+                None
+        '''
         img = img.convert('RGBA')
         size = img.size
         self.w = size[0]
