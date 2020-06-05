@@ -100,6 +100,39 @@ class EdgeDetector:
                 sobelResult[y][x]['a'] = gx['a']
 
         return sobelResult
+
+    def suppression(self):
+
+        x = 0
+        y = 0
+        theta = 0
+        g = 0
+
+        def determineG(dx1,dy1,dx2,dy2):
+            isMax = True
+            if(x + dx1 >= 0 and x + dx1 < self.w and y + dy1 >= 0 and y + dy1 < self.h):
+                isMax = isMax and (self.matrix[y+dy1][x+dx1]['g'] < g)
+            if(x + dx2 >= 0 and x + dx2 < self.w and y + dy2 >= 0 and y + dy2 < self.h):
+                isMax = isMax and (self.matrix[y+dy2][x+dx2]['g'] < g)
+
+            if not isMax:
+                self.matrix[y][x]['g'] = 0
+        
+        for y in range(self.h):
+            for x in range(self.w):
+                center = self.matrix[y][x]
+                theta = center['theta']
+                g = center['g']
+
+                if(g > 0):
+                    if(theta > 157.5 or theta <= 22.5):
+                        determineG(-1,0,1,0)
+                    elif(theta > 22.5 and theta <= 67.5):
+                        determineG(1,1,-1,-1)
+                    elif(theta > 67.5 and theta <= 112.5):
+                        determineG(0,-1,0,1)
+                    else:
+                        determineG(-1,1,1,-1)
                 
 
     @property
