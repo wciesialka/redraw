@@ -20,6 +20,8 @@ class EdgeDetector:
     WEAK_EDGE   = 1
     STRONG_EDGE = 2
 
+    ALPHA_IGNORE_LIMIT = 100
+
     def __init__(self,img:Image,*,GAUSSIAN_KERNEL_SIGMA:float=1.4,GAUSSIAN_KERNEL_SIZE:int=5):
         '''
         Create a new Edge Detector using the given Image.
@@ -79,12 +81,63 @@ class EdgeDetector:
                 px = img.getpixel((x,y))
                 self.__matrix[y][x]['v'] = min(255,round(grayscale(px[0],px[1],px[2])))
                 self.__matrix[y][x]['a'] = px[3]
+        
 
         gaussian_matrix = self.__gaussian_filter_matrix()
 
         self.__matrix = self.__convolute(gaussian_matrix)
         self.__matrix = self.__sobel()
         self.__suppress()
+        self.__calculate_iqr()
+
+    def __calculate_iqr(self):
+        value_list = []
+        for row in self.matrix:
+            for value in row:
+                if value['a'] > EdgeDetector.ALPHA_IGNORE_LIMIT:
+                    value_list.append(value['g'])
+        value_list = sorted(value_list)
+        median_index = (len(value_list)/2)
+        if round(median_index) == median_index:
+            self.__median_value = value_list[median_index-1]
+        else:
+            self.__median_value = (value_list[math.floor(median_index)-1] + value_list[math.ceil(median_index)-1])/2
+        
+        q1_index = (median_index) / 2
+        if round(q1_index) == q1_index:
+            self.__q1 = value_list[q1_index-1]
+        else:
+            self.__q1 = (value_list[math.floor(q1_index)-1] + value_list[math.ceil(q1_index)-1])/2
+
+        q3_index = len(value_list) * .75
+        if round(q3_index) == q3_index:
+            self.__q3 = value_list[q3_index-1]
+        else:
+            self.__q3 = (value_list[math.floor(q3_index)-1] + value_list[math.ceil(q3_index)-1])/2
+
+    @property
+    def median_value(self):
+        return self.__median_value
+
+    @property
+    def q1(self):
+        return self.__q1
+    
+    @property
+    def q3(self):
+        return self.__q3
+
+    @property
+    def iqr(self):
+        return self.__q3 - self.__q1
+
+    @property
+    def low_outlier(self):
+        return min(0,self.__q1 - (1.5*self.iqr))
+
+    @property
+    def high_outlier(self):
+        return max(255,self.__q3 + (1.5*self.iqr))
 
     def __gaussian_filter_matrix(self):
         
@@ -199,7 +252,7 @@ class EdgeDetector:
         
         for y in range(self.h):
             for x in range(self.w):
-                if self.__matrix[y][x]['a'] < 128:
+                if self.__matrix[y][x]['a'] < EdgeDetector.ALPHA_IGNORE_LIMIT:
                     classifications[y][x] = EdgeDetector.NO_EDGE
                 else:
                     g = self.__matrix[y][x]['g']
