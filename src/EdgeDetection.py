@@ -98,19 +98,19 @@ class EdgeDetector:
                     value_list.append(value['g'])
         value_list = sorted(value_list)
         median_index = (len(value_list)/2)
-        if round(median_index) == median_index:
+        if math.floor(median_index) == median_index:
             self.__median_value = value_list[median_index-1]
         else:
             self.__median_value = (value_list[math.floor(median_index)-1] + value_list[math.ceil(median_index)-1])/2
         
         q1_index = (median_index) / 2
-        if round(q1_index) == q1_index:
+        if math.floor(q1_index) == q1_index:
             self.__q1 = value_list[q1_index-1]
         else:
             self.__q1 = (value_list[math.floor(q1_index)-1] + value_list[math.ceil(q1_index)-1])/2
 
         q3_index = len(value_list) * .75
-        if round(q3_index) == q3_index:
+        if math.floor(q3_index) == q3_index:
             self.__q3 = value_list[q3_index-1]
         else:
             self.__q3 = (value_list[math.floor(q3_index)-1] + value_list[math.ceil(q3_index)-1])/2
