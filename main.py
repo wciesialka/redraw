@@ -60,12 +60,7 @@ def main(*,img:Image,weak:int,strong:int):
 
     pyautogui.moveTo(START[0],START[1],duration=0)
     ed = EdgeDetection.EdgeDetector(img)
-    
-    if weak == None:
-        weak = ed.q1
-    if strong == None:
-        strong = ed.q3
-    
+
     edges = ed.detect_edges(weak,strong)
     squashed = squash(edges,2)
 
@@ -109,8 +104,8 @@ def main(*,img:Image,weak:int,strong:int):
 
 if __name__=="__main__":
     parser = argparse.ArgumentParser(description="Automatically redraw an Image using Python")
-    parser.add_argument('-w','--weak',type=int,default=None,help="Upper bound for what is considered a NO EDGE during edge detection.")
-    parser.add_argument('-s','--strong',type=int,default=None,help="Lower bound for what is considered a STRONG EDGE during edge detection.")
+    parser.add_argument('-w','--weak',type=int,default=50,help="Upper bound for what is considered a NO EDGE during edge detection.")
+    parser.add_argument('-s','--strong',type=int,default=150,help="Lower bound for what is considered a STRONG EDGE during edge detection.")
     parser.add_argument('image',type=argparse.FileType('rb'),help="Image to process.")
     args = parser.parse_args()
     img = Image.open(args.image)

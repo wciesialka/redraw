@@ -1,5 +1,6 @@
 from PIL import Image
 import math
+from statistics import stdev
 
 def grayscale(r,g,b):
     return ( (0.3 * r) + (0.59 * g) + (0.11 * b) )
@@ -20,7 +21,7 @@ class EdgeDetector:
     WEAK_EDGE   = 1
     STRONG_EDGE = 2
 
-    ALPHA_IGNORE_LIMIT = 100
+    ALPHA_IGNORE_LIMIT = 128
 
     def __init__(self,img:Image,*,GAUSSIAN_KERNEL_SIGMA:float=1.4,GAUSSIAN_KERNEL_SIZE:int=5):
         '''
@@ -88,56 +89,6 @@ class EdgeDetector:
         self.__matrix = self.__convolute(gaussian_matrix)
         self.__matrix = self.__sobel()
         self.__suppress()
-        self.__calculate_iqr()
-
-    def __calculate_iqr(self):
-        value_list = []
-        for row in self.__matrix:
-            for value in row:
-                if value['a'] > EdgeDetector.ALPHA_IGNORE_LIMIT:
-                    value_list.append(value['g'])
-        value_list = sorted(value_list)
-        median_index = (len(value_list)/2)
-        if math.floor(median_index) == median_index:
-            self.__median_value = value_list[median_index-1]
-        else:
-            self.__median_value = (value_list[math.floor(median_index)-1] + value_list[math.ceil(median_index)-1])/2
-        
-        q1_index = (median_index) / 2
-        if math.floor(q1_index) == q1_index:
-            self.__q1 = value_list[q1_index-1]
-        else:
-            self.__q1 = (value_list[math.floor(q1_index)-1] + value_list[math.ceil(q1_index)-1])/2
-
-        q3_index = len(value_list) * .75
-        if math.floor(q3_index) == q3_index:
-            self.__q3 = value_list[q3_index-1]
-        else:
-            self.__q3 = (value_list[math.floor(q3_index)-1] + value_list[math.ceil(q3_index)-1])/2
-
-    @property
-    def median_value(self):
-        return self.__median_value
-
-    @property
-    def q1(self):
-        return self.__q1
-    
-    @property
-    def q3(self):
-        return self.__q3
-
-    @property
-    def iqr(self):
-        return self.__q3 - self.__q1
-
-    @property
-    def low_outlier(self):
-        return min(0,self.__q1 - (1.5*self.iqr))
-
-    @property
-    def high_outlier(self):
-        return max(255,self.__q3 + (1.5*self.iqr))
 
     def __gaussian_filter_matrix(self):
         
@@ -289,16 +240,16 @@ class EdgeDetector:
             try:
                 no_edge_threshold = int(no_edge_threshold)
             except:
-                raise TypeError('no_edge_threshold should be type int, not %' % type(no_edge_threshold))
+                raise TypeError('no_edge_threshold should be type int, not %s' % type(no_edge_threshold))
         if not strong_edge_threshold is int:
             try:
                 strong_edge_threshold = int(strong_edge_threshold)
             except:
-                raise TypeError('strong_edge_threshold should be type int, not %' % type(strong_edge_threshold))
+                raise TypeError('strong_edge_threshold should be type int, not %s' % type(strong_edge_threshold))
         if no_edge_threshold < 0 or no_edge_threshold > 255:
-            raise ValueError('no_edge_threshold should be 0 <= no_edge_threshold <= 255, not %' % no_edge_threshold)
+            raise ValueError('no_edge_threshold should be 0 <= no_edge_threshold <= 255, not %d' % no_edge_threshold)
         if strong_edge_threshold < 0 or strong_edge_threshold > 255:
-            raise ValueError('strong_edge_threshold should be 0 <= strong_edge_threshold <= 255, not %' % strong_edge_threshold)
+            raise ValueError('strong_edge_threshold should be 0 <= strong_edge_threshold <= 255, not %d' % strong_edge_threshold)
         if strong_edge_threshold < no_edge_threshold:
             raise ValueError('strong_edge_threshold should be larger than no_edge_threshold')
 
