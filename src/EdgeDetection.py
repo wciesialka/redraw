@@ -92,7 +92,7 @@ class EdgeDetector:
 
     def __calculate_iqr(self):
         value_list = []
-        for row in self.matrix:
+        for row in self.__matrix:
             for value in row:
                 if value['a'] > EdgeDetector.ALPHA_IGNORE_LIMIT:
                     value_list.append(value['g'])
